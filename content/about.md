@@ -9,4 +9,4 @@ Currently, I am a ==visiting research fellow at Caltech==, working with thermal 
 
 ## An Overambitious Goal
 
-Working on a (possibly agentic) closed-loop framework which models the deposition process from first principles (Probably KMC), propagates it into a physics-based model of the resulting device (Multiferroics sound cool), and grounds both against static and dynamic characterization — making device performance a function of the process parameters.
+Working on a (possibly agentic) closed-loop framework which models the deposition process from first principles (Probably KMC), propagates it into a physics-based model of the resulting device (Multiferroics sound cool), and grounds both against static and dynamic characterization thus making _device performance a function of the process parameters_.
