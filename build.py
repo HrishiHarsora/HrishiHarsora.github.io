@@ -87,6 +87,11 @@ def _inline(text: str) -> str:
             part = re.sub(r"\+\+([^+]+)\+\+", r"<u>\1</u>", part)
             part = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", part)
             part = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", part)
+            # Underscore italics, but only at word boundaries so snake_case and
+            # URLs containing underscores are left untouched.
+            part = re.sub(
+                r"(?<![A-Za-z0-9])_(\S(?:[^_]*\S)?)_(?![A-Za-z0-9])", r"<em>\1</em>", part
+            )
             rendered.append(part)
     return "".join(rendered)
 
