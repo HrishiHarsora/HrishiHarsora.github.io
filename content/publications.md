@@ -7,4 +7,4 @@ title: Publications
 
 ## Under Preparation
 
-1. ++Hrishi V. Harsora++, Ashutosh Krishna Amaram, Raghavan Ranganthan, Tarun K. Agarwal, *Directed Kinetic Monte Carlo Modeling of Metal-Organic Chemical Vapor Deposition (MOCVD) Process for GaAs growth*, ++currently under preparation for Nature npj Computational Materials++.
+1. ++Hrishi V. Harsora++, Ashutosh Krishna Amaram, Raghavan Ranganthan, Tarun K. Agarwal, *Directed Kinetic Monte Carlo Modeling of Metal-Organic Chemical Vapor Deposition (MOCVD) Process for GaAs growth*, ++currently under preparation for npj Computational Materials++.
