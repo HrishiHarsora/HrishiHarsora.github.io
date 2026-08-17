@@ -6,5 +6,5 @@ title: Publications
 
 ## Under Preparation
 
-1. ++Hrishi Harsora++, Bishal Laskar, Jayatika Sakhuja, U. Ganguly, S. Lashkare, *Impact of Thermal Crosstalk on PCMO based ReRAM Crossbar Architecture*, ++submitted to IEEE Non-Volatile Memory Technology Symposium (NVMTS 2026)++.
+1. ++Hrishi Harsora++, Bishal Laskar, Jayatika Sakhuja, U. Ganguly, S. Lashkare, *Impact of Thermal Crosstalk on PCMO based ReRAM Crossbar Architecture*, ++accepted at IEEE Non-Volatile Memory Technology Symposium (NVMTS 2026)++.
 2. ++Hrishi V. Harsora++, Ashutosh Krishna Amaram, Raghavan Ranganthan, Tarun K. Agarwal, *Directed Kinetic Monte Carlo Modeling of Metal-Organic Chemical Vapor Deposition (MOCVD) Process for GaAs growth*, ++currently under preparation for Nature npj Computational Materials++.
