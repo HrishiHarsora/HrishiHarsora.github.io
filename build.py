@@ -723,6 +723,11 @@ def build() -> None:
     build_feed(posts)
     (OUT / "style.css").write_text(STYLE, encoding="utf-8")
     (OUT / ".nojekyll").write_text("", encoding="utf-8")  # serve as-is on GitHub Pages
+    lab_src = CONTENT / "lab" / "gpc.html"
+    if lab_src.exists():
+        dest = OUT / "lab" / "gpc.html"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(lab_src, dest)
     print(f"Built {len(posts)} posts -> {OUT}")
 
 

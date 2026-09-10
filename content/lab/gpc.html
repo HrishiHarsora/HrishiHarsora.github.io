@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MgF₂ GPC — process knobs</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --ground:#12161a; --panel:#161b20; --ink:#e8ecf1; --ink-2:#a8b2be; --ink-3:#79838f;
+  --rule:#2c343d;
+  --violet:#9b6dff; --violet-soft:rgba(155,109,255,.22); --violet-line:rgba(155,109,255,.7);
+  --rust:#e8705c; --rust-soft:rgba(232,112,92,.28);
+  --serif:"Times New Roman",Times,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--ground);color:var(--ink);font-family:var(--serif);
+  font-size:18px;line-height:1.45;color-scheme:dark;-webkit-font-smoothing:antialiased}
+.app{padding:10px 14px 24px;max-width:1480px;margin:0 auto}
+.app[hidden]{display:none!important}
+#gate{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:var(--ground)}
+#gate[hidden]{display:none!important}
+#gate .card{background:#16121f;border:1px solid var(--violet-line);padding:28px 32px;
+  max-width:22em;width:calc(100% - 32px);border-radius:3px;text-align:center}
+#gate .mh{font-size:18px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 14px}
+#gate input{width:100%;background:#1c2228;border:1px solid #3a424c;color:var(--ink);
+  font-family:var(--serif);font-size:18px;padding:8px 10px;border-radius:3px;margin:10px 0}
+#gate input:focus{outline:none;border-color:var(--violet)}
+#gate .err{color:var(--rust);font-size:15px;min-height:1.3em;margin:4px 0 0}
+.home{position:absolute;top:10px;left:14px;z-index:3;font-size:15px;color:var(--ink-3);
+  text-decoration:none;letter-spacing:.08em;text-transform:uppercase}
+.home:hover{color:var(--ink)}
+svg.fig{display:block;width:100%;height:auto}
+svg.fig text{font-family:var(--serif);fill:var(--ink-3);font-size:15px}
+
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:2px 0 8px}
+.mh{font-size:22px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin:0}
+.mh::after{content:"";display:block;width:5em;height:1.5px;background:var(--ink);margin:8px 0 0}
+.hint{font-size:15px;color:var(--ink-3);text-align:right;line-height:1.35}
+.kmc-cue{margin:0 0 8px;font-size:15px;color:var(--ink-3)}
+
+.stage{position:relative;min-height:0;background:var(--ground)}
+#plot{cursor:crosshair;display:block;width:100%;height:min(58vh,560px)}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;
+  padding:10px 0 6px;border-top:1px solid var(--rule);margin-top:6px}
+.pick{display:flex;align-items:center;gap:7px;min-width:0}
+.plab{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.btns{display:flex;flex-wrap:wrap;gap:5px}
+button.pk{appearance:none;border:1px solid #3a424c;background:#1c2228;color:var(--ink-2);
+  font-family:var(--serif);font-size:16px;padding:4px 10px;border-radius:3px;cursor:pointer}
+button.pk:hover{color:var(--ink)}
+button.pk[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:#16121f}
+button.pk.rust[aria-pressed="true"]{background:var(--rust);border-color:var(--rust);color:#1a1210}
+.rline{display:flex;align-items:center;gap:8px}
+input[type=range]{width:110px;accent-color:var(--violet);height:16px;margin:0}
+.rval{font-size:15px;color:var(--ink-2);min-width:3.2em}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px;color:var(--ink-2);margin:4px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.key{width:10px;height:10px;flex:none;border-radius:50%}
+.key.flow{background:var(--violet)}
+.key.stat{background:var(--rust)}
+.key.wh{background:none;border:1.6px solid var(--ink-2)}
+
+.detail{margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}
+.card{min-height:2.4em;color:var(--ink-2);font-size:16px}
+.card b{color:var(--ink);font-weight:normal}
+.ftab{width:100%;border-collapse:collapse;font-size:15px;margin:8px 0 0;color:var(--ink-2)}
+.ftab caption{caption-side:top;text-align:left;color:var(--ink-3);font-size:15px;
+  letter-spacing:.1em;text-transform:uppercase;margin:0 0 4px}
+.ftab th,.ftab td{padding:3px 8px;text-align:right;border-bottom:1px solid var(--rule);font-weight:normal}
+.ftab th:first-child,.ftab td:first-child,.ftab td.l,.ftab th.l{text-align:left}
+.ftab tr{cursor:pointer}
+.ftab tr:hover td{color:var(--ink)}
+.ftab tr.on td{background:var(--violet-soft);color:var(--ink)}
+.ftab td.flow{color:var(--violet)}
+.ftab td.static{color:var(--rust)}
+
+#tip{position:fixed;z-index:20;pointer-events:none;display:none;
+  background:#16121f;border:1px solid var(--violet-line);color:var(--ink);
+  font-family:var(--serif);font-size:16px;padding:7px 10px;border-radius:3px;
+  white-space:normal;max-width:42ch;line-height:1.35}
+#tip i{font-style:italic}
+@media (max-width:720px){.head{flex-direction:column}.hint{text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="card">
+    <div class="mh">lab access</div>
+    <p class="kmc-cue" style="margin:0 0 8px">MgF<sub>2</sub> GPC — Minnich Lab</p>
+    <form id="gateForm">
+      <input type="password" id="gatePw" autocomplete="current-password" placeholder="passphrase" aria-label="Passphrase">
+      <button type="submit" class="pk" style="width:100%;margin-top:6px">enter</button>
+    </form>
+    <div class="err" id="gateErr"></div>
+  </div>
+</div>
+<div class="app" hidden>
+  <a class="home" href="/">← site</a>
+  <div class="head">
+    <h1 class="mh">MgF<sub>2</sub> GPC — process knobs</h1>
+    <div class="hint">drag a box to zoom · double-click resets<br>hover a point · click to pin</div>
+  </div>
+  <p class="kmc-cue" id="cue">each point is GPC for one recipe setting · in-situ FS-1</p>
+
+  <div class="stage">
+    <svg class="fig" id="plot" viewBox="0 0 1100 520" role="img"
+      aria-label="GPC versus the selected process parameter"></svg>
+  </div>
+  <div class="legend" aria-label="Legend">
+    <span><i class="key flow"></i> flow</span>
+    <span><i class="key stat"></i> static</span>
+  </div>
+
+  <div class="bar">
+    <div class="pick">
+      <span class="plab">X</span>
+      <div class="btns" id="xBtns"></div>
+    </div>
+    <div class="pick">
+      <span class="plab">Mode</span>
+      <div class="btns" id="mBtns"></div>
+    </div>
+    <div class="pick">
+      <span class="plab">Scale</span>
+      <div class="btns" id="sBtns"></div>
+    </div>
+    <div class="pick">
+      <span class="plab">View</span>
+      <div class="btns" id="vBtns"></div>
+    </div>
+  </div>
+
+  <section class="detail">
+    <div class="card" id="card">Click a point.</div>
+    <table class="ftab" id="tab">
+      <caption id="tabCap">visible points</caption>
+      <thead>
+        <tr>
+          <th class="l">date</th><th class="l">recipe</th><th class="l">mode</th>
+          <th class="l">setting</th><th id="xHead">x</th><th>GPC</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</div>
+<div id="tip"></div>
+<script>
+window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recipe": "MgF2 60 nm Woollam", "date": "2026-08-08", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.6199, "r2": 0.9343, "n": 4, "cyc0": 0, "cyc1": 30, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 18.0, "mg_hold": 90.0, "hf_dose": 1.0, "hf_hold": 90.0, "doses": 1.0, "bubbler": 99.74, "sample_T": 151.39, "thick": 6.6326}, {"run": "run_20260808_150700_MgF2_Mg-static_HF-flow_18deg_json", "recipe": "MgF2 Mg-static HF-flow 18deg", "date": "2026-08-08", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.6688, "r2": 0.9865, "n": 33, "cyc0": 0, "cyc1": 640, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 18.0, "mg_hold": 20.0, "hf_dose": 1.0, "hf_hold": 60.0, "doses": 1.0, "bubbler": 93.76, "sample_T": 150.14, "thick": 46.8915}, {"run": "run_20260811_092643_MgF2_Mg-static_HF-flow_18deg_42_remaining_cycles_v3_json", "recipe": "MgF2 Mg-static HF-flow 18deg 42 remaining cycles", "date": "2026-08-11", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.594, "r2": 1.0, "n": 2, "cyc0": 0, "cyc1": 20, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 18.0, "mg_hold": 20.0, "hf_dose": 1.0, "hf_hold": 60.0, "doses": 1.0, "bubbler": 93.58, "sample_T": 150.18, "thick": 49.214}, {"run": "run_20260816_105705_MgF2_Full_Static_Dose_90_deg_json", "recipe": "MgF2 Full Static Dose 90 deg", "date": "2026-08-16", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 1.0133, "r2": 0.9719, "n": 6, "cyc0": 0, "cyc1": 100, "vary": "", "mg_dose": 1.0, "n2": 150.0, "butterfly": 90.0, "mg_hold": 20.0, "hf_dose": 0.5, "hf_hold": 10.0, "doses": 1.0, "bubbler": 93.51, "sample_T": 150.97, "thick": 10.902}, {"run": "run_20260817_233351_MgF2_Full_Static_Dose_30_deg_json", "recipe": "MgF2 Full Static Dose 30 deg", "date": "2026-08-17", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 1.1365, "r2": 0.9994, "n": 6, "cyc0": 0, "cyc1": 100, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 30.0, "mg_hold": 20.0, "hf_dose": 0.5, "hf_hold": 10.0, "doses": 1.0, "bubbler": 93.53, "sample_T": 152.29, "thick": 31.875}, {"run": "run_20260819_151242_MgF2_Full_Static_Dose_30_deg_25nm_v2_json", "recipe": "MgF2 Full Static Dose 30 deg", "date": "2026-08-19", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.5278, "r2": 0.9962, "n": 7, "cyc0": 0, "cyc1": 120, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 30.0, "mg_hold": 20.0, "hf_dose": 0.5, "hf_hold": 10.0, "doses": 1.0, "bubbler": 93.63, "sample_T": 208.3, "thick": 6.4067}, {"run": "run_20260822_183650_MgF2_100C_40nm_First_08222026", "recipe": "MgF2 Full Static Dose 30 deg", "date": "2026-08-22", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 2.1791, "r2": 0.9861, "n": 9, "cyc0": 0, "cyc1": 80, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 30.0, "mg_hold": 20.0, "hf_dose": 0.5, "hf_hold": 10.0, "doses": 1.0, "bubbler": 93.95, "sample_T": 111.33, "thick": 16.6073}, {"run": "run_20260824_074028_100C_25nm_MgF2", "recipe": "MgF2 Full Static Dose 30 deg", "date": "2026-08-24", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 2.2217, "r2": 0.9924, "n": 10, "cyc0": 0, "cyc1": 90, "vary": "", "mg_dose": 1.0, "n2": 125.0, "butterfly": 30.0, "mg_hold": 20.0, "hf_dose": 0.5, "hf_hold": 10.0, "doses": 1.0, "bubbler": 93.61, "sample_T": 99.31, "thick": 19.188}, {"run": "run_20260825_130539_MgF2_Viscous_Flow_16deg_10sccm_100C_50nm_attempt1_baseline_pressure_430_mtorr_json", "recipe": "MgF2 Viscous Flow 16deg 10sccm", "date": "2026-08-25", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 3.1757, "r2": 0.9521, "n": 3, "cyc0": 0, "cyc1": 20, "vary": "", "mg_dose": 1.0, "n2": 10.0, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 95.75, "sample_T": null, "thick": 6.3513}, {"run": "run_20260825_190323_MgF2_100C_Saturation_Test_Vary_Mg_Dose_08252026", "recipe": "MgF2 Mg Dose Saturation Study 0.1-0.25-0.5s 16deg 10sccm", "date": "2026-08-25", "mode": "flow", "label": "Mg 0.10 s", "kind": "region", "gpc": 4.3822, "r2": 1.0, "n": 2, "cyc0": 1, "cyc1": 50, "vary": "mg_dose_s", "mg_dose": 0.1, "n2": 10.0, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 94.92, "sample_T": null, "thick": 16.5863}, {"run": "run_20260825_190323_MgF2_100C_Saturation_Test_Vary_Mg_Dose_08252026", "recipe": "MgF2 Mg Dose Saturation Study 0.1-0.25-0.5s 16deg 10sccm", "date": "2026-08-25", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 4.0347, "r2": 0.9975, "n": 3, "cyc0": 0, "cyc1": 20, "vary": "mg_dose_s", "mg_dose": null, "n2": 10.0, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 94.92, "sample_T": null, "thick": 16.5863}, {"run": "run_20260826_101504_MgF2_Calibration_18deg_30sccm_1s_Mg_dose_30cyc_json", "recipe": "MgF2 Calibration 18deg 30sccm 1s Mg dose 30cyc", "date": "2026-08-26", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": -0.155, "r2": 1.0, "n": 2, "cyc0": 0, "cyc1": 10, "vary": "", "mg_dose": 1.0, "n2": 30.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 98.4, "sample_T": null, "thick": 18.2078}, {"run": "run_20260826_120331_MgF2_Calibration_18deg_18sccm_1s_Mg_dose_30cyc_json", "recipe": "MgF2 Calibration 18deg 18sccm 1s Mg dose 30cyc", "date": "2026-08-26", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.8625, "r2": 0.9181, "n": 4, "cyc0": 0, "cyc1": 30, "vary": "", "mg_dose": 1.0, "n2": 18.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 97.13, "sample_T": null, "thick": 20.6776}, {"run": "run_20260826_173540_MgF2_Mg_Dose_Saturation_Study_0_1-0_2-0_4s_18deg_18sccm_json", "recipe": "MgF2 Mg Dose Saturation Study 0.1-0.2-0.4s 18deg 18sccm", "date": "2026-08-26", "mode": "flow", "label": "Mg 0.10 s", "kind": "region", "gpc": 0.0155, "r2": 0.3456, "n": 5, "cyc0": 1, "cyc1": 50, "vary": "mg_dose_s", "mg_dose": 0.1, "n2": 18.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 98.46, "sample_T": null, "thick": 21.0251}, {"run": "run_20260826_173540_MgF2_Mg_Dose_Saturation_Study_0_1-0_2-0_4s_18deg_18sccm_json", "recipe": "MgF2 Mg Dose Saturation Study 0.1-0.2-0.4s 18deg 18sccm", "date": "2026-08-26", "mode": "flow", "label": "Mg 0.20 s", "kind": "region", "gpc": -0.2135, "r2": 0.8802, "n": 3, "cyc0": 51, "cyc1": 100, "vary": "mg_dose_s", "mg_dose": 0.2, "n2": 18.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 98.46, "sample_T": null, "thick": 21.0251}, {"run": "run_20260826_173540_MgF2_Mg_Dose_Saturation_Study_0_1-0_2-0_4s_18deg_18sccm_json", "recipe": "MgF2 Mg Dose Saturation Study 0.1-0.2-0.4s 18deg 18sccm", "date": "2026-08-26", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": -0.0049, "r2": 0.0116, "n": 9, "cyc0": 0, "cyc1": 80, "vary": "mg_dose_s", "mg_dose": null, "n2": 18.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 98.46, "sample_T": null, "thick": 21.0251}, {"run": "run_20260827_122312_MgF2_Mg_Dose_Saturation_Study_Static_30deg_0_05-0_55s_json", "recipe": "MgF2 Mg Dose Saturation Study Static 30deg 0.05-0.55s", "date": "2026-08-27", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 3.3525, "r2": 1.0, "n": 2, "cyc0": 0, "cyc1": 10, "vary": "mg_dose_s", "mg_dose": null, "n2": 125.0, "butterfly": 30.0, "mg_hold": 10.0, "hf_dose": 0.1, "hf_hold": 10.0, "doses": 1.0, "bubbler": 95.6, "sample_T": null, "thick": 24.566}, {"run": "run_20260827_151058_MgF2_Mg_Dose_Saturation_Study_Static_30deg_0_03-0_04s_json", "recipe": "MgF2 Mg Dose Saturation Study Static 30deg 0.03-0.04s", "date": "2026-08-27", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 2.3601, "r2": 1.0, "n": 2, "cyc0": 0, "cyc1": 10, "vary": "mg_dose_s", "mg_dose": null, "n2": 125.0, "butterfly": 30.0, "mg_hold": 3.0, "hf_dose": 0.1, "hf_hold": 3.0, "doses": 1.0, "bubbler": 95.7, "sample_T": null, "thick": 28.0569}, {"run": "run_20260827_190815_MgF2_Calibration_90deg_40sccm_1s_Mg_1s_HF_dose_100cyc_json", "recipe": "MgF2 Calibration 90deg 40sccm 1s Mg 1s HF dose 100cyc", "date": "2026-08-27", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": -0.3824, "r2": 0.6236, "n": 3, "cyc0": 0, "cyc1": 10, "vary": "", "mg_dose": 1.0, "n2": 40.0, "butterfly": 90.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 98.89, "sample_T": null, "thick": 30.4318}, {"run": "run_20260827_204259_MgF2_Butterfly_Conductance_Study_28-25-22deg_18sccm_90cyc_json", "recipe": "MgF2 Butterfly Conductance Study 28-25-22deg 18sccm 90cyc", "date": "2026-08-27", "mode": "flow", "label": "28° butterfly", "kind": "region", "gpc": 0.9543, "r2": 0.9931, "n": 6, "cyc0": 1, "cyc1": 30, "vary": "butterfly_deg", "mg_dose": 1.0, "n2": 18.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 97.64, "sample_T": null, "thick": 37.496}, {"run": "run_20260827_204259_MgF2_Butterfly_Conductance_Study_28-25-22deg_18sccm_90cyc_json", "recipe": "MgF2 Butterfly Conductance Study 28-25-22deg 18sccm 90cyc", "date": "2026-08-27", "mode": "flow", "label": "25° butterfly", "kind": "region", "gpc": 0.9959, "r2": 0.9895, "n": 6, "cyc0": 31, "cyc1": 60, "vary": "butterfly_deg", "mg_dose": 1.0, "n2": 18.0, "butterfly": 25.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 97.64, "sample_T": null, "thick": 37.496}, {"run": "run_20260827_204259_MgF2_Butterfly_Conductance_Study_28-25-22deg_18sccm_90cyc_json", "recipe": "MgF2 Butterfly Conductance Study 28-25-22deg 18sccm 90cyc", "date": "2026-08-27", "mode": "flow", "label": "22° butterfly", "kind": "region", "gpc": 0.9438, "r2": 0.8693, "n": 3, "cyc0": 61, "cyc1": 90, "vary": "butterfly_deg", "mg_dose": 1.0, "n2": 18.0, "butterfly": 22.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 97.64, "sample_T": null, "thick": 37.496}, {"run": "run_20260827_204259_MgF2_Butterfly_Conductance_Study_28-25-22deg_18sccm_90cyc_json", "recipe": "MgF2 Butterfly Conductance Study 28-25-22deg 18sccm 90cyc", "date": "2026-08-27", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 1.0241, "r2": 0.997, "n": 16, "cyc0": 0, "cyc1": 75, "vary": "butterfly_deg", "mg_dose": 1.0, "n2": 18.0, "butterfly": null, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 97.64, "sample_T": null, "thick": 37.496}, {"run": "run_20260828_193333_MgF2_N2_Flow_Saturation_Study_28deg_24-21-18sccm_90cyc_80c_bubbler_json", "recipe": "MgF2 N2 Flow Saturation Study 28deg 24-21-18sccm 90cyc", "date": "2026-08-28", "mode": "flow", "label": "N2 24 sccm", "kind": "region", "gpc": -0.0402, "r2": 0.2446, "n": 4, "cyc0": 1, "cyc1": 30, "vary": "n2_sccm", "mg_dose": 1.0, "n2": 24.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 83.04, "sample_T": null, "thick": 39.0321}, {"run": "run_20260828_193333_MgF2_N2_Flow_Saturation_Study_28deg_24-21-18sccm_90cyc_80c_bubbler_json", "recipe": "MgF2 N2 Flow Saturation Study 28deg 24-21-18sccm 90cyc", "date": "2026-08-28", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.0407, "r2": 0.1546, "n": 5, "cyc0": 0, "cyc1": 20, "vary": "n2_sccm", "mg_dose": 1.0, "n2": null, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 83.04, "sample_T": null, "thick": 39.0321}, {"run": "run_20260829_124657_MgF2_N2_Flow_Saturation_Study_18deg_20-15-10sccm_90cyc_bubbler_80c_json", "recipe": "MgF2 N2 Flow Saturation Study 18deg 20-15-10sccm 90cyc", "date": "2026-08-29", "mode": "flow", "label": "N2 20 sccm", "kind": "region", "gpc": 0.29, "r2": 1.0, "n": 2, "cyc0": 1, "cyc1": 30, "vary": "n2_sccm", "mg_dose": 1.0, "n2": 20.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 83.68, "sample_T": null, "thick": 39.2579}, {"run": "run_20260829_124657_MgF2_N2_Flow_Saturation_Study_18deg_20-15-10sccm_90cyc_bubbler_80c_json", "recipe": "MgF2 N2 Flow Saturation Study 18deg 20-15-10sccm 90cyc", "date": "2026-08-29", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.4022, "r2": 0.9747, "n": 3, "cyc0": 0, "cyc1": 10, "vary": "n2_sccm", "mg_dose": 1.0, "n2": null, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 83.68, "sample_T": null, "thick": 39.2579}, {"run": "run_20260829_235430_MgF2_N2_Flow_Saturation_Study_16deg_15-10-5sccm_90cyc_json", "recipe": "MgF2 N2 Flow Saturation Study 16deg 15-10-5sccm 90cyc", "date": "2026-08-29", "mode": "flow", "label": "N2 15 sccm", "kind": "region", "gpc": 0.0089, "r2": 0.0227, "n": 6, "cyc0": 1, "cyc1": 30, "vary": "n2_sccm", "mg_dose": 1.0, "n2": 15.0, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 87.58, "sample_T": null, "thick": 40.3876}, {"run": "run_20260829_235430_MgF2_N2_Flow_Saturation_Study_16deg_15-10-5sccm_90cyc_json", "recipe": "MgF2 N2 Flow Saturation Study 16deg 15-10-5sccm 90cyc", "date": "2026-08-29", "mode": "flow", "label": "N2 10 sccm", "kind": "region", "gpc": 0.018, "r2": 0.034, "n": 5, "cyc0": 31, "cyc1": 60, "vary": "n2_sccm", "mg_dose": 1.0, "n2": 10.0, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 87.58, "sample_T": null, "thick": 40.3876}, {"run": "run_20260829_235430_MgF2_N2_Flow_Saturation_Study_16deg_15-10-5sccm_90cyc_json", "recipe": "MgF2 N2 Flow Saturation Study 16deg 15-10-5sccm 90cyc", "date": "2026-08-29", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.1299, "r2": 0.7866, "n": 12, "cyc0": 0, "cyc1": 55, "vary": "n2_sccm", "mg_dose": 1.0, "n2": null, "butterfly": 16.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 87.58, "sample_T": null, "thick": 40.3876}, {"run": "run_20260830_080933_MgF2_Full_Static_Dose_30_deg_100m_ms_doses_5s_holds_86-88C_bubbler_json", "recipe": "MgF2 Full Static Dose 30 deg 100m ms doses 5s holds", "date": "2026-08-30", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.6122, "r2": 0.9303, "n": 16, "cyc0": 0, "cyc1": 75, "vary": "", "mg_dose": 0.1, "n2": 125.0, "butterfly": 30.0, "mg_hold": 5.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 87.17, "sample_T": 101.57, "thick": 44.667}, {"run": "run_20260830_232411_MgF2_Full_Static_Dose_30_deg_Mg_Dose_Saturation_Study_0_2-0_4-0_6s_150cyc_86-89C_bubbler_json", "recipe": "MgF2 Full Static Dose 30 deg Mg Dose Saturation Study 0.2-0.4-0.6s 150cyc", "date": "2026-08-30", "mode": "static", "label": "Mg 0.2 s", "kind": "region", "gpc": 5.3597, "r2": 0.9994, "n": 5, "cyc0": 1, "cyc1": 50, "vary": "mg_dose_s", "mg_dose": 0.2, "n2": 125.0, "butterfly": 30.0, "mg_hold": 5.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": 104.81, "thick": 80.809}, {"run": "run_20260830_232411_MgF2_Full_Static_Dose_30_deg_Mg_Dose_Saturation_Study_0_2-0_4-0_6s_150cyc_86-89C_bubbler_json", "recipe": "MgF2 Full Static Dose 30 deg Mg Dose Saturation Study 0.2-0.4-0.6s 150cyc", "date": "2026-08-30", "mode": "static", "label": "Mg 0.4 s", "kind": "region", "gpc": 3.4655, "r2": 0.9986, "n": 3, "cyc0": 51, "cyc1": 100, "vary": "mg_dose_s", "mg_dose": 0.4, "n2": 125.0, "butterfly": 30.0, "mg_hold": 5.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": 104.81, "thick": 80.809}, {"run": "run_20260830_232411_MgF2_Full_Static_Dose_30_deg_Mg_Dose_Saturation_Study_0_2-0_4-0_6s_150cyc_86-89C_bubbler_json", "recipe": "MgF2 Full Static Dose 30 deg Mg Dose Saturation Study 0.2-0.4-0.6s 150cyc", "date": "2026-08-30", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 4.5482, "r2": 0.9912, "n": 9, "cyc0": 0, "cyc1": 80, "vary": "mg_dose_s", "mg_dose": null, "n2": 125.0, "butterfly": 30.0, "mg_hold": 5.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": 104.81, "thick": 80.809}, {"run": "run_20260831_215856_MgF2_Static_30deg_50ms_dose_Mg_Hold_Saturation_Study_1-3-5-10s_200cyc_json", "recipe": "MgF2 Static 30deg 50ms dose Mg Hold Saturation Study 1-3-5-10s 200cyc", "date": "2026-08-31", "mode": "static", "label": "Mg 1 s hold", "kind": "region", "gpc": 0.0272, "r2": 0.8142, "n": 5, "cyc0": 1, "cyc1": 50, "vary": "mg_hold_s", "mg_dose": 0.05, "n2": 125.0, "butterfly": 30.0, "mg_hold": 1.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.24, "sample_T": null, "thick": 6.1775}, {"run": "run_20260831_215856_MgF2_Static_30deg_50ms_dose_Mg_Hold_Saturation_Study_1-3-5-10s_200cyc_json", "recipe": "MgF2 Static 30deg 50ms dose Mg Hold Saturation Study 1-3-5-10s 200cyc", "date": "2026-08-31", "mode": "static", "label": "Mg 3 s hold", "kind": "region", "gpc": 0.0649, "r2": 0.4483, "n": 3, "cyc0": 51, "cyc1": 100, "vary": "mg_hold_s", "mg_dose": 0.05, "n2": 125.0, "butterfly": 30.0, "mg_hold": 3.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.24, "sample_T": null, "thick": 6.1775}, {"run": "run_20260831_215856_MgF2_Static_30deg_50ms_dose_Mg_Hold_Saturation_Study_1-3-5-10s_200cyc_json", "recipe": "MgF2 Static 30deg 50ms dose Mg Hold Saturation Study 1-3-5-10s 200cyc", "date": "2026-08-31", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.0515, "r2": 0.8884, "n": 9, "cyc0": 0, "cyc1": 80, "vary": "mg_hold_s", "mg_dose": 0.05, "n2": 125.0, "butterfly": 30.0, "mg_hold": null, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.24, "sample_T": null, "thick": 6.1775}, {"run": "run_20260901_134203_MgF2_Static_30deg_50ms_dose_Mg_Hold_Saturation_Study_10-30-60s_150cyc_json", "recipe": "MgF2 Static 30deg 50ms dose Mg Hold Saturation Study 10-30-60s 150cyc", "date": "2026-09-01", "mode": "static", "label": "Mg 10 s hold", "kind": "region", "gpc": 0.0381, "r2": 0.1913, "n": 5, "cyc0": 1, "cyc1": 50, "vary": "mg_hold_s", "mg_dose": 0.05, "n2": 125.0, "butterfly": 30.0, "mg_hold": 10.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.36, "sample_T": null, "thick": 6.4665}, {"run": "run_20260901_134203_MgF2_Static_30deg_50ms_dose_Mg_Hold_Saturation_Study_10-30-60s_150cyc_json", "recipe": "MgF2 Static 30deg 50ms dose Mg Hold Saturation Study 10-30-60s 150cyc", "date": "2026-09-01", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.0456, "r2": 0.4654, "n": 7, "cyc0": 0, "cyc1": 60, "vary": "mg_hold_s", "mg_dose": 0.05, "n2": 125.0, "butterfly": 30.0, "mg_hold": null, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.36, "sample_T": null, "thick": 6.4665}, {"run": "run_20260901_232335_MgF2_Static_30deg_90ms_dose_Mg_Hold_Saturation_Study_5-10-20-30s_200cyc_json", "recipe": "MgF2 Static 30deg 90ms dose Mg Hold Saturation Study 5-10-20-30s 200cyc", "date": "2026-09-01", "mode": "static", "label": "Mg 5 s hold", "kind": "region", "gpc": 0.2661, "r2": 0.9757, "n": 5, "cyc0": 1, "cyc1": 50, "vary": "mg_hold_s", "mg_dose": 0.09, "n2": 125.0, "butterfly": 30.0, "mg_hold": 5.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": null, "thick": 9.0762}, {"run": "run_20260901_232335_MgF2_Static_30deg_90ms_dose_Mg_Hold_Saturation_Study_5-10-20-30s_200cyc_json", "recipe": "MgF2 Static 30deg 90ms dose Mg Hold Saturation Study 5-10-20-30s 200cyc", "date": "2026-09-01", "mode": "static", "label": "Mg 10 s hold", "kind": "region", "gpc": 0.3773, "r2": 0.8242, "n": 3, "cyc0": 51, "cyc1": 100, "vary": "mg_hold_s", "mg_dose": 0.09, "n2": 125.0, "butterfly": 30.0, "mg_hold": 10.0, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": null, "thick": 9.0762}, {"run": "run_20260901_232335_MgF2_Static_30deg_90ms_dose_Mg_Hold_Saturation_Study_5-10-20-30s_200cyc_json", "recipe": "MgF2 Static 30deg 90ms dose Mg Hold Saturation Study 5-10-20-30s 200cyc", "date": "2026-09-01", "mode": "static", "label": "whole run", "kind": "whole", "gpc": 0.3285, "r2": 0.9806, "n": 9, "cyc0": 0, "cyc1": 80, "vary": "mg_hold_s", "mg_dose": 0.09, "n2": 125.0, "butterfly": 30.0, "mg_hold": null, "hf_dose": 0.1, "hf_hold": 5.0, "doses": 1.0, "bubbler": 86.28, "sample_T": null, "thick": 9.0762}, {"run": "run_20260903_175252_MgF2_Calibration_18deg_75sccm_1s_Mg_1s_HF_dose_120cyc_94C_bubbler_json", "recipe": "MgF2 Calibration 18deg 75sccm 1s Mg 1s HF dose 120cyc 94C bubbler", "date": "2026-09-03", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.0011, "r2": 0.0002, "n": 4, "cyc0": 0, "cyc1": 30, "vary": "", "mg_dose": 1.0, "n2": 75.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 95.24, "sample_T": null, "thick": 14.2948}, {"run": "run_20260903_224507_MgF2_Calibration_18deg_18sccm_1s_Mg_1s_HF_dose_120cyc_95C_bubbler_json", "recipe": "MgF2 Calibration 18deg 18sccm 1s Mg 1s HF dose 120cyc 95C bubbler", "date": "2026-09-03", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.0505, "r2": 0.2271, "n": 7, "cyc0": 0, "cyc1": 60, "vary": "", "mg_dose": 1.0, "n2": 18.0, "butterfly": 18.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 93.77, "sample_T": null, "thick": 14.7879}, {"run": "run_20260904_075342_MgF2_Calibration_17deg_10sccm_1s_Mg_1s_HF_dose_120cyc_ellips20_95C_bubbler_json", "recipe": "MgF2 Calibration 17deg 10sccm 1s Mg 1s HF dose 120cyc ellips20 95C bubbler", "date": "2026-09-04", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.6135, "r2": 0.8224, "n": 3, "cyc0": 0, "cyc1": 40, "vary": "", "mg_dose": 1.0, "n2": 10.0, "butterfly": 17.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 94.12, "sample_T": null, "thick": 17.1193}, {"run": "run_20260904_164553_MgF2_Calibration_28deg_30sccm_1s_Mg_1s_HF_dose_120cyc_ellips20_100C_bubbler_starting_temp_json", "recipe": "MgF2 Calibration 28deg 30sccm 1s Mg 1s HF dose 120cyc ellips20 96C bubbler", "date": "2026-09-04", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.5079, "r2": 0.9713, "n": 5, "cyc0": 0, "cyc1": 80, "vary": "", "mg_dose": 1.0, "n2": 30.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.29, "sample_T": null, "thick": 22.297}, {"run": "run_20260905_140506_MgF2_Mg_Dose_Saturation_28deg_30sccm_2-3s_120cyc_100C_bubbler_noisecal_json", "recipe": "MgF2 Mg Dose Saturation 28deg 30sccm 2-3s 120cyc 100C bubbler noisecal", "date": "2026-09-05", "mode": "flow", "label": "Mg 2 s dose", "kind": "region", "gpc": -0.0026, "r2": 0.4533, "n": 3, "cyc0": 1, "cyc1": 60, "vary": "mg_dose_s", "mg_dose": 2.0, "n2": 30.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 102.6, "sample_T": null, "thick": 23.3995}, {"run": "run_20260905_140506_MgF2_Mg_Dose_Saturation_28deg_30sccm_2-3s_120cyc_100C_bubbler_noisecal_json", "recipe": "MgF2 Mg Dose Saturation 28deg 30sccm 2-3s 120cyc 100C bubbler noisecal", "date": "2026-09-05", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.0172, "r2": 0.5293, "n": 4, "cyc0": 0, "cyc1": 60, "vary": "mg_dose_s", "mg_dose": null, "n2": 30.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 102.6, "sample_T": null, "thick": 23.3995}, {"run": "run_20260905_141042_MgF2_Mg_Dose_Saturation_28deg_30sccm_2-3s_120cyc_100C_bubbler_json", "recipe": "MgF2 Mg Dose Saturation 28deg 30sccm 2-3s 120cyc 100C bubbler", "date": "2026-09-05", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.9511, "r2": 1.0, "n": 2, "cyc0": 0, "cyc1": 20, "vary": "mg_dose_s", "mg_dose": null, "n2": 30.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.9, "sample_T": null, "thick": 25.3046}, {"run": "run_20260905_173836_MgF2_N2_Flow_Saturation_28deg_40-50-60sccm_2s_Mg_180cyc_100C_bubbler_json", "recipe": "MgF2 N2 Flow Saturation 28deg 40-50-60sccm 2s Mg 180cyc 100C bubbler", "date": "2026-09-05", "mode": "flow", "label": "N2 40 sccm", "kind": "region", "gpc": 0.7821, "r2": 0.9974, "n": 3, "cyc0": 1, "cyc1": 60, "vary": "n2_sccm", "mg_dose": 2.0, "n2": 40.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.77, "sample_T": null, "thick": 31.231}, {"run": "run_20260905_173836_MgF2_N2_Flow_Saturation_28deg_40-50-60sccm_2s_Mg_180cyc_100C_bubbler_json", "recipe": "MgF2 N2 Flow Saturation 28deg 40-50-60sccm 2s Mg 180cyc 100C bubbler", "date": "2026-09-05", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.7239, "r2": 0.9847, "n": 5, "cyc0": 0, "cyc1": 80, "vary": "n2_sccm", "mg_dose": 2.0, "n2": null, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.77, "sample_T": null, "thick": 31.231}, {"run": "run_20260906_143512_MgF2_ABA_Flow_Check_28deg_40-43-40sccm_2s_Mg_140cyc_100C_bubbler_json", "recipe": "MgF2 ABA Flow Check 28deg 40-43-40sccm 2s Mg 140cyc 100C bubbler", "date": "2026-09-06", "mode": "flow", "label": "N2 40 sccm", "kind": "region", "gpc": 0.7641, "r2": 1.0, "n": 2, "cyc0": 1, "cyc1": 40, "vary": "n2_sccm", "mg_dose": 2.0, "n2": 40.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.58, "sample_T": null, "thick": 37.247}, {"run": "run_20260906_143512_MgF2_ABA_Flow_Check_28deg_40-43-40sccm_2s_Mg_140cyc_100C_bubbler_json", "recipe": "MgF2 ABA Flow Check 28deg 40-43-40sccm 2s Mg 140cyc 100C bubbler", "date": "2026-09-06", "mode": "flow", "label": "N2 43 sccm", "kind": "region", "gpc": 0.9043, "r2": 1.0, "n": 2, "cyc0": 41, "cyc1": 100, "vary": "n2_sccm", "mg_dose": 2.0, "n2": 43.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.58, "sample_T": null, "thick": 37.247}, {"run": "run_20260906_143512_MgF2_ABA_Flow_Check_28deg_40-43-40sccm_2s_Mg_140cyc_100C_bubbler_json", "recipe": "MgF2 ABA Flow Check 28deg 40-43-40sccm 2s Mg 140cyc 100C bubbler", "date": "2026-09-06", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.728, "r2": 0.9924, "n": 5, "cyc0": 0, "cyc1": 80, "vary": "n2_sccm", "mg_dose": 2.0, "n2": null, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 101.58, "sample_T": null, "thick": 37.247}, {"run": "run_20260907_141310_MgF2_MultiDose_Saturation_28deg_45sccm_1x-2x-3x_2s_doses_140cyc_100C_bubbler_json", "recipe": "MgF2 MultiDose Saturation 28deg 45sccm 1x-2x-3x 2s doses 140cyc 100C bubbler", "date": "2026-09-07", "mode": "flow", "label": "1x Mg dose", "kind": "region", "gpc": 0.8808, "r2": 0.999, "n": 3, "cyc0": 1, "cyc1": 60, "vary": "mg_doses_per_cycle", "mg_dose": 2.0, "n2": 45.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 102.06, "sample_T": null, "thick": 48.944}, {"run": "run_20260907_141310_MgF2_MultiDose_Saturation_28deg_45sccm_1x-2x-3x_2s_doses_140cyc_100C_bubbler_json", "recipe": "MgF2 MultiDose Saturation 28deg 45sccm 1x-2x-3x 2s doses 140cyc 100C bubbler", "date": "2026-09-07", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.8669, "r2": 0.9987, "n": 5, "cyc0": 0, "cyc1": 80, "vary": "mg_doses_per_cycle", "mg_dose": 2.0, "n2": 45.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": null, "bubbler": 102.06, "sample_T": null, "thick": 48.944}, {"run": "run_20260908_182811_MgF2_Hennessy_Retry_18deg_125sccm_2s_Mg_300s_purges_120cyc_100C_bubbler_json", "recipe": "MgF2 Hennessy Retry 18deg 125sccm 2s Mg 300s purges 120cyc 100C bubbler", "date": "2026-09-08", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": -0.0176, "r2": 0.1605, "n": 4, "cyc0": 0, "cyc1": 60, "vary": "", "mg_dose": 2.0, "n2": 125.0, "butterfly": 18.0, "mg_hold": 300.0, "hf_dose": 1.0, "hf_hold": 300.0, "doses": 1.0, "bubbler": 103.94, "sample_T": null, "thick": 54.6794}, {"run": "run_20260909_110239_MgF2_Purge_ABA_28deg_45sccm_Mg_purge_240-960-240s_120cyc_100C_bubbler_json", "recipe": "MgF2 Purge ABA 28deg 45sccm Mg purge 240-960-240s 120cyc 100C bubbler", "date": "2026-09-09", "mode": "flow", "label": "Mg 240 s hold", "kind": "region", "gpc": 0.832, "r2": 1.0, "n": 2, "cyc0": 1, "cyc1": 40, "vary": "mg_hold_s", "mg_dose": 2.0, "n2": 45.0, "butterfly": 28.0, "mg_hold": 240.0, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 102.48, "sample_T": null, "thick": 59.278}, {"run": "run_20260909_110239_MgF2_Purge_ABA_28deg_45sccm_Mg_purge_240-960-240s_120cyc_100C_bubbler_json", "recipe": "MgF2 Purge ABA 28deg 45sccm Mg purge 240-960-240s 120cyc 100C bubbler", "date": "2026-09-09", "mode": "flow", "label": "whole run", "kind": "whole", "gpc": 0.8072, "r2": 0.9998, "n": 4, "cyc0": 0, "cyc1": 60, "vary": "mg_hold_s", "mg_dose": 2.0, "n2": 45.0, "butterfly": 28.0, "mg_hold": null, "hf_dose": 1.0, "hf_hold": 240.0, "doses": 1.0, "bubbler": 102.48, "sample_T": null, "thick": 59.278}];
+</script>
+<script>
+(function(){
+  var HASH="481d136637b11799abd2a70e761cd8624576be9a7c4e48fb1e7eea813ea94455";
+  var KEY="gpc-lab-ok";
+  function open(){
+    document.getElementById("gate").hidden=true;
+    document.querySelector(".app").hidden=false;
+    window.dispatchEvent(new Event("resize"));
+  }
+  if(sessionStorage.getItem(KEY)==="1"){ open(); return; }
+  document.getElementById("gateForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    var pw=document.getElementById("gatePw").value;
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw)).then(function(buf){
+      var hex=Array.from(new Uint8Array(buf)).map(function(x){ return x.toString(16).padStart(2,"0"); }).join("");
+      if(hex===HASH){ sessionStorage.setItem(KEY,"1"); open(); }
+      else document.getElementById("gateErr").textContent="not that";
+    });
+  });
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var DATA=window.GPC_DATA||[];
+  function q(id){ return document.getElementById(id); }
+  function el(n,at,txt){
+    var e=document.createElementNS(NS,n);
+    for(var k in at) if(at[k]!=null) e.setAttribute(k,at[k]);
+    if(txt!=null) e.textContent=txt;
+    return e;
+  }
+  function clear(s){ while(s.firstChild) s.removeChild(s.firstChild); }
+
+  var AXES=[
+    {id:"mg_dose",  lab:"Mg dose",   unit:"s",     field:"mg_dose"},
+    {id:"n2",       lab:"N₂ flow",   unit:"sccm",  field:"n2"},
+    {id:"butterfly",lab:"butterfly", unit:"deg",   field:"butterfly"},
+    {id:"mg_hold",  lab:"Mg hold",   unit:"s",     field:"mg_hold"},
+    {id:"hf_dose",  lab:"HF dose",   unit:"s",     field:"hf_dose"},
+    {id:"doses",    lab:"doses / cyc",unit:"",    field:"doses"},
+    {id:"bubbler",  lab:"bubbler",   unit:"°C",    field:"bubbler"}
+  ];
+  var S={x:"mg_dose", mode:"all", log:false, pin:null, hover:null, zoom:null};
+  var VIEW=null;
+  var HAS_SEG={};
+  DATA.forEach(function(p){ if(p.kind==="region") HAS_SEG[p.run]=true; });
+
+  function ax(){ for(var i=0;i<AXES.length;i++) if(AXES[i].id===S.x) return AXES[i]; return AXES[0]; }
+  function xv(p){ var v=p[ax().field]; return (v==null||v!==v)?null:v; }
+  function pass(p){
+    if(S.mode!=="all" && p.mode!==S.mode) return false;
+    if(HAS_SEG[p.run] ? p.kind!=="region" : p.kind!=="whole") return false;
+    return xv(p)!=null;
+  }
+  function vis(){ return DATA.filter(pass); }
+
+  function fmt(v,d){ if(v==null||v!==v) return "—"; return Number(v).toFixed(d==null?2:d); }
+  function gpc(v){ return (v>=0?"+":"")+Number(v).toFixed(3); }
+
+  function mkBtn(host,label,on,fn,cls){
+    var b=document.createElement("button");
+    b.className="pk"+(cls?" "+cls:""); b.type="button"; b.innerHTML=label;
+    b.setAttribute("aria-pressed",on?"true":"false");
+    b.addEventListener("click",fn);
+    host.appendChild(b); return b;
+  }
+  function sync(){
+    [].forEach.call(q("xBtns").children,function(b,i){
+      b.setAttribute("aria-pressed", AXES[i].id===S.x?"true":"false"); });
+    var ms=["all","flow","static"];
+    [].forEach.call(q("mBtns").children,function(b,i){
+      b.setAttribute("aria-pressed", ms[i]===S.mode?"true":"false"); });
+    [].forEach.call(q("sBtns").children,function(b,i){
+      b.setAttribute("aria-pressed", (i===1)===S.log?"true":"false"); });
+    if(q("vBtns").firstChild)
+      q("vBtns").firstChild.setAttribute("aria-pressed", S.zoom?"true":"false");
+    q("xHead").textContent=ax().lab;
+  }
+  (function build(){
+    AXES.forEach(function(a){
+      mkBtn(q("xBtns"), a.lab, a.id===S.x, function(){ S.x=a.id; S.zoom=null; draw(); });
+    });
+    [["all",""],["flow",""],["static","rust"]].forEach(function(m){
+      mkBtn(q("mBtns"), m[0], m[0]===S.mode, function(){ S.mode=m[0]; draw(); }, m[1]);
+    });
+    mkBtn(q("sBtns"),"lin",true,function(){ S.log=false; S.zoom=null; draw(); });
+    mkBtn(q("sBtns"),"log",false,function(){ S.log=true; S.zoom=null; draw(); });
+    mkBtn(q("vBtns"),"reset",false,function(){ S.zoom=null; draw(); });
+  })();
+
+  function nice(min,max,n){
+    if(min===max){ min-=1; max+=1; }
+    var span=max-min, step=Math.pow(10,Math.floor(Math.log10(span/n)));
+    var err=(span/n)/step;
+    if(err>=7.5) step*=10; else if(err>=3) step*=5; else if(err>=1.5) step*=2;
+    var t0=Math.ceil(min/step)*step, out=[];
+    for(var t=t0;t<=max+step*0.01;t+=step) out.push(+t.toFixed(8));
+    return out;
+  }
+  function logTicks(a,b){
+    var out=[], p=Math.floor(Math.log10(a));
+    for(;p<=Math.ceil(Math.log10(b))+1e-9;p++){
+      for(var m=1;m<10;m++){ var v=m*Math.pow(10,p); if(v>=a*0.999 && v<=b*1.001) out.push(v); }
+    }
+    return out;
+  }
+
+  var BOX={L:64,R:18,T:18,B:48};
+  var HIT=[];
+
+  function draw(){
+    sync();
+    var pts=vis(), A=ax(), s=q("plot");
+    clear(s); HIT=[];
+    var W=1100, H=520;
+    s.setAttribute("viewBox","0 0 "+W+" "+H);
+    s.appendChild(el("rect",{x:0,y:0,width:W,height:H,fill:"var(--ground)"}));
+    var L=BOX.L, R=W-BOX.R, T=BOX.T, B=H-BOX.B;
+
+    q("cue").innerHTML="usable MgF<sub>2</sub> runs, Aug–Sep 2026 · "+pts.length+" points"
+      +(S.zoom?" · zoomed":"");
+    q("tabCap").textContent=pts.length+" visible points";
+
+    if(!pts.length){
+      s.appendChild(el("text",{x:W/2,y:H/2,"text-anchor":"middle",fill:"var(--ink-3)","font-size":18},
+        "no points pass the filters"));
+      fillTab([]); paintCard(null); return;
+    }
+
+    var xs=pts.map(xv), ys=pts.map(function(p){ return p.gpc; });
+    var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs);
+    var y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
+    var yPad=Math.max(0.08,(y1-y0)*0.12);
+    y0-=yPad; y1+=yPad;
+    if(y0>0) y0=Math.min(0,y0);
+    if(y1<0) y1=Math.max(0,y1);
+
+    var useLog=S.log && (S.zoom?S.zoom.x0:x0)>0 && (S.zoom?S.zoom.x1:x1)/(S.zoom?S.zoom.x0:x0)>1.05;
+    if(S.zoom){
+      x0=S.zoom.x0; x1=S.zoom.x1; y0=S.zoom.y0; y1=S.zoom.y1;
+      if(useLog && x0<=0) x0=Math.min.apply(null,xs.filter(function(v){ return v>0; }))||1e-6;
+    } else if(useLog){ x0=x0/1.15; x1=x1*1.15; }
+    else { var xp=Math.max((x1-x0)*0.06, Math.abs(x1)*0.04, 0.02); x0-=xp; x1+=xp; }
+    if(x1<=x0) x1=x0+1e-6;
+    if(y1<=y0) y1=y0+1e-6;
+
+    function X(v){
+      if(useLog) return L+(Math.log(v)-Math.log(x0))/(Math.log(x1)-Math.log(x0))*(R-L);
+      return L+(v-x0)/(x1-x0)*(R-L);
+    }
+    function Y(v){ return B-(v-y0)/(y1-y0)*(B-T); }
+    VIEW={L:L,R:R,T:T,B:B,x0:x0,x1:x1,y0:y0,y1:y1,useLog:useLog};
+
+    function tickDec(span){
+      if(span>=10) return 0; if(span>=1) return 1; if(span>=0.1) return 2; if(span>=0.01) return 3; return 4;
+    }
+    var xd=tickDec(x1-x0), yd=tickDec(y1-y0);
+    var xt=useLog?logTicks(x0,x1):nice(x0,x1,6);
+    var yt=nice(y0,y1,6);
+    xt.forEach(function(t){
+      if((useLog && t<=0) || t<x0 || t>x1) return;
+      var x=X(t);
+      s.appendChild(el("line",{x1:x,y1:T,x2:x,y2:B,stroke:"var(--rule)","stroke-width":1}));
+      var lab=useLog?(t>=1?String(t):t.toFixed(t<0.1?2:1)):fmt(t, xd);
+      s.appendChild(el("text",{x:x,y:B+20,"text-anchor":"middle","font-size":14},lab));
+    });
+    yt.forEach(function(t){
+      var y=Y(t);
+      s.appendChild(el("line",{x1:L,y1:y,x2:R,y2:y,stroke:"var(--rule)","stroke-width":1}));
+      s.appendChild(el("text",{x:L-8,y:y+5,"text-anchor":"end","font-size":14},fmt(t,yd)));
+    });
+    s.appendChild(el("line",{x1:L,y1:T,x2:L,y2:B,stroke:"var(--ink-3)","stroke-width":1.15}));
+    s.appendChild(el("line",{x1:L,y1:B,x2:R,y2:B,stroke:"var(--ink-3)","stroke-width":1.15}));
+    if(y0<0 && y1>0){
+      s.appendChild(el("line",{x1:L,y1:Y(0),x2:R,y2:Y(0),stroke:"var(--ink-3)",
+        "stroke-width":1,"stroke-dasharray":"3 3",opacity:.55}));
+    }
+    var xlab=A.lab+(A.unit?("  ("+A.unit+")"):"");
+    s.appendChild(el("text",{x:(L+R)/2,y:H-8,"text-anchor":"middle","font-size":16,fill:"var(--ink-2)"},xlab));
+    s.appendChild(el("text",{x:16,y:(T+B)/2,"text-anchor":"middle","font-size":16,fill:"var(--ink-2)",
+      transform:"rotate(-90 16 "+((T+B)/2).toFixed(1)+")"},"GPC  (Å / cycle)"));
+
+    var defs=el("defs");
+    var clip=el("clipPath",{id:"pc"});
+    clip.appendChild(el("rect",{x:L,y:T,width:R-L,height:B-T}));
+    defs.appendChild(clip); s.appendChild(defs);
+    var layer=el("g",{"clip-path":"url(#pc)"}); s.appendChild(layer);
+
+    var VARY={mg_dose_s:"mg_dose",n2_sccm:"n2",butterfly_deg:"butterfly",
+      mg_hold_s:"mg_hold",mg_doses_per_cycle:"doses"};
+    var groups={};
+    pts.forEach(function(p){
+      if(p.kind!=="region") return;
+      if(VARY[p.vary]!==S.x) return;
+      (groups[p.run]=groups[p.run]||[]).push(p);
+    });
+    Object.keys(groups).forEach(function(run){
+      var g=groups[run].slice().sort(function(a,b){ return xv(a)-xv(b); });
+      if(g.length<2) return;
+      if(Math.abs(xv(g[g.length-1])-xv(g[0]))<1e-9) return;
+      var d=g.map(function(p,i){ return (i?"L":"M")+X(xv(p)).toFixed(1)+" "+Y(p.gpc).toFixed(1); }).join(" ");
+      var col=g[0].mode==="static"?"var(--rust)":"var(--violet)";
+      var on=S.pin && S.pin.run===run;
+      layer.appendChild(el("path",{d:d,fill:"none",stroke:col,"stroke-width":on?2.2:1.4,
+        opacity:S.pin && !on?0.18:0.55}));
+    });
+
+    var seen={};
+    pts.forEach(function(p,i){
+      var x=X(xv(p)), y=Y(p.gpc);
+      var key=xv(p).toFixed(5);
+      seen[key]=(seen[key]||0)+1;
+      x += (seen[key]-1)*5;
+      var col=p.mode==="static"?"var(--rust)":"var(--violet)";
+      var on=S.pin===p;
+      var fade=S.pin && S.pin.run!==p.run ? 0.16 : 1;
+      var rr=on?7.2:5.6;
+      layer.appendChild(el("circle",{cx:x,cy:y,r:rr,fill:col,stroke:"rgba(0,0,0,.4)",
+        "stroke-width":.7,opacity:fade,"data-i":i}));
+      if(on){
+        layer.appendChild(el("circle",{cx:x,cy:y,r:rr+5.5,fill:"none",stroke:col,
+          "stroke-width":1.4,opacity:.85}));
+      }
+      HIT.push({p:p,x:x,y:y,r:rr+3.5});
+    });
+
+    fillTab(pts);
+    paintCard(S.pin||S.hover);
+  }
+
+  function tipHTML(p){
+    var A=ax();
+    return "<div><i>"+p.recipe+"</i></div>"
+      +"<div>"+p.date+" · "+p.mode+(p.label && p.label!=="whole run"?" · "+p.label:"")+"</div>"
+      +"<div>"+A.lab+" = "+fmt(xv(p), xv(p)>=10?1:2)+(A.unit?(" "+A.unit):"")
+      +" · GPC "+gpc(p.gpc)+" Å/cyc</div>";
+  }
+  function paintCard(p){
+    var c=q("card");
+    if(!p){ c.textContent="Click a point."; return; }
+    var bits=[
+      "<b>"+p.date+"</b>  "+p.recipe,
+      p.mode+(p.label && p.label!=="whole run"?" · "+p.label:"")+" · cycles "+p.cyc0+"–"+p.cyc1,
+      "GPC "+gpc(p.gpc)+" Å/cyc",
+      "Mg "+fmt(p.mg_dose,2)+" s · HF "+fmt(p.hf_dose,2)+" s · N₂ "+fmt(p.n2,0)+" sccm · "
+        +fmt(p.butterfly,0)+"° · hold "+fmt(p.mg_hold,1)+" s · bubbler "+fmt(p.bubbler,1)+" °C"
+    ];
+    c.innerHTML=bits.join("<br>");
+  }
+
+  function fillTab(pts){
+    var tb=q("tab").tBodies[0];
+    tb.innerHTML="";
+    pts.slice().sort(function(a,b){
+      var d=(xv(a)||0)-(xv(b)||0); return d||(b.gpc-a.gpc);
+    }).forEach(function(p){
+      var tr=document.createElement("tr");
+      if(S.pin===p) tr.className="on";
+      var cells=[p.date, p.recipe, p.mode,
+        (p.label && p.label!=="whole run")?p.label:"—",
+        fmt(xv(p), xv(p)>=10?1:2), gpc(p.gpc)];
+      cells.forEach(function(t,i){
+        var td=document.createElement("td");
+        td.textContent=t;
+        if(i<4) td.className="l";
+        if(i===2) td.classList.add(p.mode);
+        tr.appendChild(td);
+      });
+      tr.addEventListener("click",function(){ S.pin=(S.pin===p)?null:p; draw(); });
+      tb.appendChild(tr);
+    });
+  }
+
+  var tip=q("tip");
+  function showTip(ev,p){ tip.innerHTML=tipHTML(p); tip.style.display="block"; moveTip(ev); }
+  function moveTip(ev){ tip.style.left=(ev.clientX+14)+"px"; tip.style.top=(ev.clientY+12)+"px"; }
+  function hideTip(){ tip.style.display="none"; }
+
+  function svgXY(ev){
+    var s=q("plot"), m=s.getScreenCTM();
+    if(!m || !s.createSVGPoint) return null;
+    var pt=s.createSVGPoint();
+    pt.x=ev.clientX; pt.y=ev.clientY;
+    var p=pt.matrixTransform(m.inverse());
+    return {x:p.x, y:p.y};
+  }
+  function hitAt(ev){
+    var xy=svgXY(ev); if(!xy) return null;
+    var best=null, bd=1e9;
+    HIT.forEach(function(h){
+      var d=Math.hypot(h.x-xy.x,h.y-xy.y);
+      if(d<h.r && d<bd){ bd=d; best=h; }
+    });
+    return best;
+  }
+  function hoverMark(h){
+    var old=q("hov"); if(old) old.parentNode.removeChild(old);
+    if(!h) return;
+    var col=h.p.mode==="static"?"var(--rust)":"var(--violet)";
+    q("plot").appendChild(el("circle",{id:"hov",cx:h.x,cy:h.y,r:h.r+2,
+      fill:"none",stroke:col,"stroke-width":1.3,opacity:.9}));
+  }
+  function dataAt(px,py){
+    if(!VIEW) return null;
+    var V=VIEW, tx=(px-V.L)/Math.max(V.R-V.L,1e-9), ty=(V.B-py)/Math.max(V.B-V.T,1e-9);
+    tx=Math.max(0,Math.min(1,tx)); ty=Math.max(0,Math.min(1,ty));
+    var x=V.useLog?Math.exp(Math.log(V.x0)+tx*(Math.log(V.x1)-Math.log(V.x0))):V.x0+tx*(V.x1-V.x0);
+    return {x:x, y:V.y0+ty*(V.y1-V.y0)};
+  }
+  function setZbox(a,b){
+    var z=q("zbox");
+    if(!a||Math.hypot(a.x-b.x,a.y-b.y)<4){ if(z) z.parentNode.removeChild(z); return; }
+    if(!z){
+      z=el("rect",{id:"zbox",fill:"var(--violet-soft)",stroke:"var(--violet)","stroke-width":1.2});
+      q("plot").appendChild(z);
+    }
+    z.setAttribute("x",Math.min(a.x,b.x)); z.setAttribute("y",Math.min(a.y,b.y));
+    z.setAttribute("width",Math.abs(b.x-a.x)); z.setAttribute("height",Math.abs(b.y-a.y));
+  }
+  var drag=null;
+  q("plot").addEventListener("pointerdown",function(e){
+    var xy=svgXY(e); if(!xy) return;
+    drag={a:xy,b:xy,moved:0};
+    if(q("plot").setPointerCapture) q("plot").setPointerCapture(e.pointerId);
+  });
+  q("plot").addEventListener("pointermove",function(e){
+    if(drag){
+      var xy=svgXY(e); if(!xy) return;
+      drag.b=xy; drag.moved=Math.hypot(xy.x-drag.a.x,xy.y-drag.a.y);
+      setZbox(drag.a,drag.b); hideTip(); hoverMark(null); return;
+    }
+    var h=hitAt(e); S.hover=h?h.p:null;
+    hoverMark(h);
+    if(h) showTip(e,h.p); else hideTip();
+    if(!S.pin) paintCard(S.hover);
+  });
+  q("plot").addEventListener("pointerup",function(e){
+    if(!drag) return;
+    var moved=drag.moved>14;
+    var a=drag.a, b=drag.b; drag=null; setZbox(null);
+    if(moved){
+      var p=dataAt(a.x,a.y), qv=dataAt(b.x,b.y);
+      if(p&&qv){
+        var x0=Math.min(p.x,qv.x), x1=Math.max(p.x,qv.x);
+        var y0=Math.min(p.y,qv.y), y1=Math.max(p.y,qv.y);
+        if(x1>x0 && y1>y0){ S.zoom={x0:x0,x1:x1,y0:y0,y1:y1}; draw(); return; }
+      }
+    }
+    var h=hitAt(e); S.pin=(h && S.pin===h.p)?null:(h?h.p:null); draw();
+  });
+  q("plot").addEventListener("pointerleave",function(){
+    if(drag) return;
+    S.hover=null; hoverMark(null); hideTip(); if(!S.pin) paintCard(null);
+  });
+  q("plot").addEventListener("dblclick",function(e){
+    if(e.preventDefault) e.preventDefault();
+    S.zoom=null; draw();
+  });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && S.zoom){ S.zoom=null; draw(); } });
+
+  draw();
+})();
+</script>
+</body>
+</html>
