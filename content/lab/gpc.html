@@ -104,7 +104,7 @@ input[type=range]{width:110px;accent-color:var(--violet);height:16px;margin:0}
   <a class="home" href="/">← site</a>
   <div class="head">
     <h1 class="mh">MgF<sub>2</sub> GPC — process knobs</h1>
-    <div class="hint">drag a box to zoom · double-click resets<br>hover a point · click to pin · GP uses that point</div>
+    <div class="hint">2D: drag to zoom · 3D: set Y, drag to rotate<br>hover a point · click to pin · GP uses that point</div>
   </div>
   <p class="kmc-cue" id="cue">each point is GPC for one recipe setting · in-situ FS-1</p>
 
@@ -116,13 +116,17 @@ input[type=range]{width:110px;accent-color:var(--violet);height:16px;margin:0}
     <span><i class="key flow"></i> flow</span>
     <span><i class="key stat"></i> static</span>
     <span><i class="key line flow"></i> GP</span>
-    <span>band = &plusmn;1&sigma; on this X, other knobs fixed</span>
+    <span>2D band / 3D mesh = GP, other knobs fixed</span>
   </div>
 
   <div class="bar">
     <div class="pick">
       <span class="plab">X</span>
       <div class="btns" id="xBtns"></div>
+    </div>
+    <div class="pick">
+      <span class="plab">Y</span>
+      <div class="btns" id="yBtns"></div>
     </div>
     <div class="pick">
       <span class="plab">Mode</span>
@@ -145,7 +149,7 @@ input[type=range]{width:110px;accent-color:var(--violet);height:16px;margin:0}
       <thead>
         <tr>
           <th class="l">date</th><th class="l">recipe</th><th class="l">mode</th>
-          <th class="l">setting</th><th id="xHead">x</th><th>GPC</th>
+          <th class="l">setting</th><th id="xHead">x</th><th id="yHead">y</th><th>GPC</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -200,17 +204,22 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     {id:"doses",    lab:"doses / cyc",unit:"",    field:"doses"},
     {id:"bubbler",  lab:"bubbler",   unit:"°C",    field:"bubbler"}
   ];
-  var S={x:"mg_dose", mode:"all", log:false, gp:true, pin:null, hover:null, zoom:null};
+  var S={x:"mg_dose", y:null, yaw:0.85, pitch:0.5, mode:"all", log:false, gp:true, pin:null, hover:null, zoom:null};
   var VIEW=null;
   var HAS_SEG={};
   DATA.forEach(function(p){ if(p.kind==="region") HAS_SEG[p.run]=true; });
 
   function ax(){ for(var i=0;i<AXES.length;i++) if(AXES[i].id===S.x) return AXES[i]; return AXES[0]; }
+  function ay(){ if(!S.y) return null; for(var i=0;i<AXES.length;i++) if(AXES[i].id===S.y) return AXES[i]; return null; }
   function xv(p){ var v=p[ax().field]; return (v==null||v!==v)?null:v; }
+  function yv(p){ var A=ay(); if(!A) return null; var v=p[A.field]; return (v==null||v!==v)?null:v; }
+  function is3d(){ return !!(S.y && S.y!==S.x); }
   function pass(p){
     if(S.mode!=="all" && p.mode!==S.mode) return false;
     if(HAS_SEG[p.run] ? p.kind!=="region" : p.kind!=="whole") return false;
-    return xv(p)!=null;
+    if(xv(p)==null) return false;
+    if(is3d() && yv(p)==null) return false;
+    return true;
   }
   function vis(){ return DATA.filter(pass); }
 
@@ -367,6 +376,11 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
   function sync(){
     [].forEach.call(q("xBtns").children,function(b,i){
       b.setAttribute("aria-pressed", AXES[i].id===S.x?"true":"false"); });
+    if(q("yBtns")){
+      [].forEach.call(q("yBtns").children,function(b,i){
+        b.setAttribute("aria-pressed", i===0 ? !S.y : (AXES[i-1] && AXES[i-1].id===S.y)?"true":"false");
+      });
+    }
     var ms=["all","flow","static"];
     [].forEach.call(q("mBtns").children,function(b,i){
       b.setAttribute("aria-pressed", ms[i]===S.mode?"true":"false"); });
@@ -378,10 +392,15 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
       if(vb[1]) vb[1].setAttribute("aria-pressed", S.zoom?"true":"false");
     }
     q("xHead").textContent=ax().lab;
+    if(q("yHead")) q("yHead").textContent=ay()?ay().lab:"y";
   }
   (function build(){
     AXES.forEach(function(a){
       mkBtn(q("xBtns"), a.lab, a.id===S.x, function(){ S.x=a.id; S.zoom=null; draw(); });
+    });
+    mkBtn(q("yBtns"),"off",true,function(){ S.y=null; draw(); });
+    AXES.forEach(function(a){
+      mkBtn(q("yBtns"), a.lab, false, function(){ S.y=a.id; S.zoom=null; draw(); });
     });
     [["all",""],["flow",""],["static","rust"]].forEach(function(m){
       mkBtn(q("mBtns"), m[0], m[0]===S.mode, function(){ S.mode=m[0]; draw(); }, m[1]);
@@ -389,7 +408,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     mkBtn(q("sBtns"),"lin",true,function(){ S.log=false; S.zoom=null; draw(); });
     mkBtn(q("sBtns"),"log",false,function(){ S.log=true; S.zoom=null; draw(); });
     mkBtn(q("vBtns"),"GP",true,function(){ S.gp=!S.gp; draw(); });
-    mkBtn(q("vBtns"),"reset",false,function(){ S.zoom=null; draw(); });
+    mkBtn(q("vBtns"),"reset",false,function(){ S.zoom=null; S.yaw=0.85; S.pitch=0.5; draw(); });
   })();
 
   function nice(min,max,n){
@@ -412,9 +431,123 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
   var BOX={L:64,R:18,T:18,B:48};
   var HIT=[];
 
+  function gpGrid(x0,x1,y0,y1,n,mode,center){
+    var dummy={mode:mode, mg_dose:center.mg_dose, n2:center.n2, butterfly:center.butterfly,
+      mg_hold:center.mg_hold, hf_dose:center.hf_dose, doses:center.doses,
+      bubbler:center.bubbler, sample_T:center.sample_T};
+    var vecs=[], meta=[], i, j;
+    for(i=0;i<n;i++){
+      for(j=0;j<n;j++){
+        var xv=x0+(x1-x0)*i/(n-1), yv=y0+(y1-y0)*j/(n-1);
+        dummy[ax().field]=xv; dummy[ay().field]=yv;
+        vecs.push(gpVec(dummy, mode));
+        meta.push({x:xv,y:yv});
+      }
+    }
+    var pr=gpPred(vecs);
+    return meta.map(function(m,k){ return {x:m.x,y:m.y,z:pr[k].mu}; });
+  }
+
+  function draw3(pts){
+    var A=ax(), B=ay(), s=q("plot");
+    clear(s); HIT=[];
+    var W=1100, H=520;
+    s.setAttribute("viewBox","0 0 "+W+" "+H);
+    s.appendChild(el("rect",{x:0,y:0,width:W,height:H,fill:"var(--ground)"}));
+    var L=70, R=W-24, T=28, Bot=H-36, cx=(L+R)/2, cy=(T+Bot)/2+10, sc=Math.min(R-L,Bot-T)*0.52;
+    var xs=pts.map(xv), ys=pts.map(yv), zs=pts.map(function(p){ return p.gpc; });
+    var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs);
+    var y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
+    var z0=Math.min.apply(null,zs), z1=Math.max.apply(null,zs);
+    if(x1<=x0) x1=x0+1e-6; if(y1<=y0) y1=y0+1e-6;
+    var zPad=Math.max(0.08,(z1-z0)*0.12); z0-=zPad; z1+=zPad;
+    if(z1<=z0) z1=z0+1e-6;
+    var gpModes=S.mode==="all"?["flow","static"]:[S.mode];
+    var center=gpCenter(pts);
+    var grids=S.gp?gpModes.map(function(m){ return {mode:m, g:gpGrid(x0,x1,y0,y1,8,m,center)}; }):[];
+    grids.forEach(function(G){
+      G.g.forEach(function(p){ z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); });
+    });
+    if(z1<=z0) z1=z0+1e-6;
+    function nx(v){ return (v-x0)/(x1-x0); }
+    function ny(v){ return (v-y0)/(y1-y0); }
+    function nz(v){ return (v-z0)/(z1-z0); }
+    function proj(xn,yn,zn){
+      var X=xn-0.5, Y=yn-0.5, Z=zn-0.5;
+      var c=Math.cos(S.yaw), s=Math.sin(S.yaw);
+      var xe=X*c+Y*s, ye=-X*s+Y*c;
+      var cp=Math.cos(S.pitch), sp=Math.sin(S.pitch);
+      return {x:cx+xe*sc, y:cy-(ye*sp+Z*cp)*sc, d:ye*cp-Z*sp};
+    }
+    function corner(a,b,c){ return proj(a,b,c); }
+    var box=[
+      [[0,0,0],[1,0,0]],[[0,0,0],[0,1,0]],[[0,0,0],[0,0,1]],
+      [[1,0,0],[1,1,0]],[[1,0,0],[1,0,1]],[[0,1,0],[1,1,0]],
+      [[0,1,0],[0,1,1]],[[0,0,1],[1,0,1]],[[0,0,1],[0,1,1]],
+      [[1,1,0],[1,1,1]],[[1,0,1],[1,1,1]],[[0,1,1],[1,1,1]]
+    ];
+    box.forEach(function(e){
+      var p=corner(e[0][0],e[0][1],e[0][2]), qv=corner(e[1][0],e[1][1],e[1][2]);
+      s.appendChild(el("line",{x1:p.x,y1:p.y,x2:qv.x,y2:qv.y,stroke:"var(--rule)","stroke-width":1}));
+    });
+    var o=proj(0,0,0), px=proj(1,0,0), py=proj(0,1,0), pz=proj(0,0,1);
+    function lab(p,t){ s.appendChild(el("text",{x:p.x,y:p.y,"font-size":14,fill:"var(--ink-2)"},t)); }
+    lab({x:px.x+8,y:px.y+4}, A.lab+(A.unit?(" ("+A.unit+")"):""));
+    lab({x:py.x+8,y:py.y+4}, B.lab+(B.unit?(" ("+B.unit+")"):""));
+    lab({x:pz.x-8,y:pz.y-6}, "GPC");
+    var n=8;
+    grids.forEach(function(G){
+      var col=G.mode==="static"?"var(--rust)":"var(--violet)";
+      var i,j;
+      for(i=0;i<n;i++){
+        var d="";
+        for(j=0;j<n;j++){
+          var p=G.g[i*n+j], qv=proj(nx(p.x),ny(p.y),nz(p.z));
+          d+=(j?"L":"M")+qv.x.toFixed(1)+" "+qv.y.toFixed(1);
+        }
+        s.appendChild(el("path",{d:d,fill:"none",stroke:col,"stroke-width":1.2,opacity:0.45}));
+      }
+      for(j=0;j<n;j++){
+        d="";
+        for(i=0;i<n;i++){
+          p=G.g[i*n+j]; qv=proj(nx(p.x),ny(p.y),nz(p.z));
+          d+=(i?"L":"M")+qv.x.toFixed(1)+" "+qv.y.toFixed(1);
+        }
+        s.appendChild(el("path",{d:d,fill:"none",stroke:col,"stroke-width":1.2,opacity:0.45}));
+      }
+    });
+    var marked=pts.map(function(p){
+      var pr=proj(nx(xv(p)),ny(yv(p)),nz(p.gpc));
+      return {p:p,x:pr.x,y:pr.y,d:pr.d};
+    }).sort(function(a,b){ return a.d-b.d; });
+    marked.forEach(function(h){
+      var col=h.p.mode==="static"?"var(--rust)":"var(--violet)";
+      var on=S.pin===h.p;
+      var fade=S.pin && S.pin.run!==h.p.run?0.18:1;
+      var rr=on?7.2:5.6;
+      s.appendChild(el("circle",{cx:h.x,cy:h.y,r:rr,fill:col,stroke:"rgba(0,0,0,.4)",
+        "stroke-width":.7,opacity:fade}));
+      if(on) s.appendChild(el("circle",{cx:h.x,cy:h.y,r:rr+5.5,fill:"none",stroke:col,"stroke-width":1.4}));
+      HIT.push({p:h.p,x:h.x,y:h.y,r:rr+4});
+    });
+    VIEW={L:L,R:R,T:T,B:Bot,x0:x0,x1:x1,y0:z0,y1:z1,useLog:false,three:true};
+    q("cue").innerHTML="3D · "+A.lab+" × "+B.lab+" · height is GPC · drag to rotate · "+pts.length+" points"
+      +(S.gp?(S.pin?" · GP pinned":" · GP at median knobs"):"");
+    fillTab(pts); paintCard(S.pin||S.hover);
+  }
+
   function draw(){
     sync();
     var pts=vis(), A=ax(), s=q("plot");
+    if(is3d()){
+      if(!pts.length){
+        clear(s); HIT=[];
+        s.appendChild(el("text",{x:550,y:260,"text-anchor":"middle",fill:"var(--ink-3)","font-size":18},
+          "no points have both knobs"));
+        fillTab([]); paintCard(null); return;
+      }
+      draw3(pts); return;
+    }
     clear(s); HIT=[];
     var W=1100, H=520;
     s.setAttribute("viewBox","0 0 "+W+" "+H);
@@ -597,7 +730,9 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
       if(S.pin===p) tr.className="on";
       var cells=[p.date, p.recipe, p.mode,
         (p.label && p.label!=="whole run")?p.label:"—",
-        fmt(xv(p), xv(p)>=10?1:2), gpc(p.gpc)];
+        fmt(xv(p), xv(p)>=10?1:2),
+        is3d()?fmt(yv(p), yv(p)>=10?1:2):"—",
+        gpc(p.gpc)];
       cells.forEach(function(t,i){
         var td=document.createElement("td");
         td.textContent=t;
@@ -659,13 +794,18 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
   var drag=null;
   q("plot").addEventListener("pointerdown",function(e){
     var xy=svgXY(e); if(!xy) return;
-    drag={a:xy,b:xy,moved:0};
+    drag={a:xy,b:xy,moved:0,yaw0:S.yaw,pit0:S.pitch};
     if(q("plot").setPointerCapture) q("plot").setPointerCapture(e.pointerId);
   });
   q("plot").addEventListener("pointermove",function(e){
     if(drag){
       var xy=svgXY(e); if(!xy) return;
       drag.b=xy; drag.moved=Math.hypot(xy.x-drag.a.x,xy.y-drag.a.y);
+      if(is3d()){
+        S.yaw=drag.yaw0+(xy.x-drag.a.x)*0.008;
+        S.pitch=Math.max(-0.15,Math.min(1.2, drag.pit0-(xy.y-drag.a.y)*0.008));
+        hideTip(); hoverMark(null); draw(); return;
+      }
       setZbox(drag.a,drag.b); hideTip(); hoverMark(null); return;
     }
     var h=hitAt(e); S.hover=h?h.p:null;
@@ -678,6 +818,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     var moved=drag.moved>14;
     var a=drag.a, b=drag.b; drag=null; setZbox(null);
     if(moved){
+      if(is3d()) return;
       var p=dataAt(a.x,a.y), qv=dataAt(b.x,b.y);
       if(p&&qv){
         var x0=Math.min(p.x,qv.x), x1=Math.max(p.x,qv.x);
@@ -693,7 +834,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
   });
   q("plot").addEventListener("dblclick",function(e){
     if(e.preventDefault) e.preventDefault();
-    S.zoom=null; draw();
+    S.zoom=null; S.yaw=0.85; S.pitch=0.5; draw();
   });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && S.zoom){ S.zoom=null; draw(); } });
 
