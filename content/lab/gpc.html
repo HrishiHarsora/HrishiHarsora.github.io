@@ -104,7 +104,7 @@ input[type=range]{width:110px;accent-color:var(--violet);height:16px;margin:0}
   <a class="home" href="/">← site</a>
   <div class="head">
     <h1 class="mh">MgF<sub>2</sub> GPC — process knobs</h1>
-    <div class="hint">2D: drag to zoom · 3D: set Y, drag to rotate<br>hover a point · click to pin · GP uses that point</div>
+    <div class="hint">2D: drag a box to zoom · 3D: drag to rotate, scroll to zoom<br>hover a point · click to pin · GP uses that point</div>
   </div>
   <p class="kmc-cue" id="cue">each point is GPC for one recipe setting · in-situ FS-1</p>
 
@@ -204,7 +204,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     {id:"doses",    lab:"doses / cyc",unit:"",    field:"doses"},
     {id:"bubbler",  lab:"bubbler",   unit:"°C",    field:"bubbler"}
   ];
-  var S={x:"mg_dose", y:null, yaw:0.85, pitch:0.5, mode:"all", log:false, gp:true, pin:null, hover:null, zoom:null};
+  var S={x:"mg_dose", y:null, yaw:0.85, pitch:0.5, zsc:1, mode:"all", log:false, gp:true, pin:null, hover:null, zoom:null};
   var VIEW=null;
   var HAS_SEG={};
   DATA.forEach(function(p){ if(p.kind==="region") HAS_SEG[p.run]=true; });
@@ -408,7 +408,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     mkBtn(q("sBtns"),"lin",true,function(){ S.log=false; S.zoom=null; draw(); });
     mkBtn(q("sBtns"),"log",false,function(){ S.log=true; S.zoom=null; draw(); });
     mkBtn(q("vBtns"),"GP",true,function(){ S.gp=!S.gp; draw(); });
-    mkBtn(q("vBtns"),"reset",false,function(){ S.zoom=null; S.yaw=0.85; S.pitch=0.5; draw(); });
+    mkBtn(q("vBtns"),"reset",false,function(){ S.zoom=null; S.yaw=0.85; S.pitch=0.5; S.zsc=1; draw(); });
   })();
 
   function nice(min,max,n){
@@ -454,7 +454,7 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
     var W=1100, H=520;
     s.setAttribute("viewBox","0 0 "+W+" "+H);
     s.appendChild(el("rect",{x:0,y:0,width:W,height:H,fill:"var(--ground)"}));
-    var L=70, R=W-24, T=28, Bot=H-36, cx=(L+R)/2, cy=(T+Bot)/2+10, sc=Math.min(R-L,Bot-T)*0.52;
+    var L=70, R=W-24, T=28, Bot=H-36, cx=(L+R)/2, cy=(T+Bot)/2+10, sc=Math.min(R-L,Bot-T)*0.52*(S.zsc||1);
     var xs=pts.map(xv), ys=pts.map(yv), zs=pts.map(function(p){ return p.gpc; });
     var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs);
     var y0=Math.min.apply(null,ys), y1=Math.max.apply(null,ys);
@@ -834,9 +834,20 @@ window.GPC_DATA = [{"run": "run_20260808_091652_MgF2_60_nm_Woollam_json", "recip
   });
   q("plot").addEventListener("dblclick",function(e){
     if(e.preventDefault) e.preventDefault();
-    S.zoom=null; S.yaw=0.85; S.pitch=0.5; draw();
+    S.zoom=null; S.yaw=0.85; S.pitch=0.5; S.zsc=1; draw();
   });
-  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && S.zoom){ S.zoom=null; draw(); } });
+  q("plot").addEventListener("wheel",function(e){
+    if(!is3d()) return;
+    if(e.preventDefault) e.preventDefault();
+    var f=e.deltaY>0?0.9:1.11;
+    S.zsc=Math.max(0.4, Math.min(6, (S.zsc||1)*f));
+    draw();
+  }, {passive:false});
+  document.addEventListener("keydown",function(e){
+    if(e.key!=="Escape") return;
+    if(S.zoom){ S.zoom=null; draw(); return; }
+    if(is3d() && S.zsc!==1){ S.zsc=1; draw(); }
+  });
 
   draw();
 })();
