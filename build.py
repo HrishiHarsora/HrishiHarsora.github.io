@@ -45,7 +45,7 @@ SITE = {
     "base_url": "https://hrishiharsora.github.io",
     # External links shown in the navigation bar.
     "github_url": "https://github.com/HrishiHarsora",
-    "cv_url": "https://drive.google.com/file/d/1zuEHBbX6TYTuY7v8Cb1yxR11cZQRl9Fg/view?usp=sharing",
+    "cv_url": "https://drive.google.com/file/d/1MPUYPnmFxMfj7qKCmNTcM4-bMvtL8Nxt/view?usp=sharing",
     # Contact-card links. Leave blank to hide that icon.
     "linkedin_url": "https://www.linkedin.com/in/hrishih",
     "phone": "+919175007025",
@@ -638,6 +638,8 @@ ol.timeline .detail {
 /* Publications-style numbered lists: space entries out, hanging indent. */
 main ol:not(.timeline) { padding-left: 1.4rem; }
 main ol:not(.timeline) li { margin-bottom: 0.55rem; padding-left: 0.3rem; }
+/* PDF / DOI links within publication entries: bold, dark blue. */
+main ol:not(.timeline) li a { color: #1a5fb4; font-weight: 700; }
 
 /* Sub-pages (everything except the home timeline): tighter line spacing. */
 body:not(.home) { line-height: 1.3; }
