@@ -638,8 +638,10 @@ ol.timeline .detail {
 /* Publications-style numbered lists: space entries out, hanging indent. */
 main ol:not(.timeline) { padding-left: 1.4rem; }
 main ol:not(.timeline) li { margin-bottom: 0.55rem; padding-left: 0.3rem; }
-/* PDF / DOI links within publication entries: bold, dark blue. */
+/* PDF / DOI links within publication entries: bold, dark blue, in [brackets]. */
 main ol:not(.timeline) li a { color: #1a5fb4; font-weight: 700; }
+main ol:not(.timeline) li a::before { content: "["; }
+main ol:not(.timeline) li a::after { content: "]"; }
 
 /* Sub-pages (everything except the home timeline): tighter line spacing. */
 body:not(.home) { line-height: 1.3; }
