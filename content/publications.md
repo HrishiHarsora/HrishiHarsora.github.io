@@ -1,7 +1,7 @@
 ---
 title: Publications
 ---
-1. ++Hrishi Harsora++, Bishal Laskar, Jayatika Sakhuja, U. Ganguly, S. Lashkare, *Impact of Thermal Crosstalk on PCMO based ReRAM Crossbar Architecture*, ++Accepted at IEEE Non-Volatile Memory Technology Symposium (NVMTS 2026)++.
+1. ++Hrishi Harsora++, Bishal Laskar, Jayatika Sakhuja, U. Ganguly, S. Lashkare, *Impact of Thermal Crosstalk on PCMO based ReRAM Crossbar Architecture*, ++Accepted at IEEE Non-Volatile Memory Technology Symposium (NVMTS 2026)++. [Paper](https://drive.google.com/file/d/1L-WrcieqrwfS9AfPpwT_Qvwo-j8aZUjn/view?usp=sharing)
 2. ++Hrishi Viral Harsora++, Soham Sinha, Tarun Kumar Agarwal, *Multiscale Modelling of Metal-Organic Chemical Vapour Deposition (MOCVD) Process for GaAs growth*, ++published++ at IEEE International Conference on High Performance Computing, Data and Analytics Workshop (HiPCW) 2025.
 3. Rajib Mahato, Maruthi Mala, Verkala Tanuj Kumar, ++Hrishi Viral Harsora++, Albin Tony, Sahil Rathi, Satyendra Nath Gupta, Anagh Bhaumik, *Decorated Graphene Quantum Dots on "Puckered" Graphene Quantum Sheets for Photosensing Applications*, ++published++ in ACS Applied Optical Materials 2025.
 
