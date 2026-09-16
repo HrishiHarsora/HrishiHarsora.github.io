@@ -7,6 +7,8 @@ June 2025 :: Published in ==ACS Applied Optical Materials==
 December 2025 :: Published in ==IEEE International Conference on High Performance Computing, Data and Analytics Workshop==
 *Multiscale Modelling of Metal-Organic Chemical Vapour Deposition (MOCVD) Process for GaAs growth*
 
+August 2026 :: Published in ==IEEE Non-Volatile Memory Technology Symposium (NVMTS)== at University of Tokyo
+
 August - Present :: Visiting Research Fellow, ==Caltech==
 *Thermal ALD of AlF₃ Thin Films for UV Optics: Growth, Characterization, and Modeling*
 *Realization of electron enhanced ALD using holocathode plasma*
