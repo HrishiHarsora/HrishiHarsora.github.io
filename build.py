@@ -591,24 +591,13 @@ ol.timeline li::before {
   background: var(--text);
   border-radius: 50%;
 }
-/* A date range spans its whole entry as a slim vertical bar instead of a dot. */
+/* A date range (period of time) is a rounded bar, same width as the dots, and
+   every range bar is the same size. One-time events stay as dots. */
 ol.timeline li.range::before {
-  top: 0.5rem;
-  bottom: 0.5rem;
+  top: 0.4rem;
+  bottom: 0.4rem;
   height: auto;
-  width: 0.2rem;
-  left: -0.18rem;
-  border-radius: 0.1rem;
-}
-/* The newest entry (top of the timeline) gets a thick bar running to the very
-   top, marking "now". */
-ol.timeline li:first-child::before {
-  top: -1rem;
-  bottom: 0.35rem;
-  height: auto;
-  width: 0.5rem;
-  left: -0.33rem;
-  border-radius: 0.25rem;
+  border-radius: 0.21rem;
 }
 ol.timeline .when {
   display: block;
