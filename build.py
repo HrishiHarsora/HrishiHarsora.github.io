@@ -591,12 +591,14 @@ ol.timeline li::before {
   background: var(--text);
   border-radius: 50%;
 }
-/* A date range spans its whole entry as a rounded bar instead of a dot. */
+/* A date range spans its whole entry as a slim vertical bar instead of a dot. */
 ol.timeline li.range::before {
   top: 0.5rem;
   bottom: 0.5rem;
   height: auto;
-  border-radius: 0.21rem;
+  width: 0.2rem;
+  left: -0.18rem;
+  border-radius: 0.1rem;
 }
 /* An ongoing "Present" entry, when it's the newest, runs its bar to the top. */
 ol.timeline li.present:first-child::before {
