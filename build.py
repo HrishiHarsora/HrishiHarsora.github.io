@@ -600,9 +600,15 @@ ol.timeline li.range::before {
   left: -0.18rem;
   border-radius: 0.1rem;
 }
-/* An ongoing "Present" entry, when it's the newest, runs its bar to the top. */
-ol.timeline li.present:first-child::before {
+/* The newest entry (top of the timeline) gets a thick bar running to the very
+   top, marking "now". */
+ol.timeline li:first-child::before {
   top: -1rem;
+  bottom: 0.35rem;
+  height: auto;
+  width: 0.5rem;
+  left: -0.33rem;
+  border-radius: 0.25rem;
 }
 ol.timeline .when {
   display: block;
