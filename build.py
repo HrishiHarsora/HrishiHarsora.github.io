@@ -45,7 +45,7 @@ SITE = {
     "base_url": "https://hrishiharsora.github.io",
     # External links shown in the navigation bar.
     "github_url": "https://github.com/HrishiHarsora",
-    "cv_url": "https://drive.google.com/file/d/1MPUYPnmFxMfj7qKCmNTcM4-bMvtL8Nxt/view?usp=sharing",
+    "cv_url": "https://drive.google.com/file/d/1RTlOnzP8OlJFzbl0y5nYhGJw-I7FyE9Y/view?usp=sharing",
     # Contact-card links. Leave blank to hide that icon.
     "linkedin_url": "https://www.linkedin.com/in/hrishih",
     "phone": "+919175007025",
@@ -331,8 +331,6 @@ def _entry_date(when: str) -> datetime:
     Anything unrecognised sorts to the bottom.
     """
     when = when.strip()
-    if "present" in when.lower():   # ongoing — always sorts to the very top
-        return datetime.max
     for fmt in ("%B %Y", "%b %Y", "%Y-%m-%d", "%Y-%m", "%B %d, %Y", "%Y"):
         try:
             return datetime.strptime(when, fmt)
@@ -600,8 +598,8 @@ ol.timeline li.range::before {
   height: auto;
   border-radius: 0.21rem;
 }
-/* An ongoing "Present" entry runs its bar right up to the top of the timeline. */
-ol.timeline li.present::before {
+/* An ongoing "Present" entry, when it's the newest, runs its bar to the top. */
+ol.timeline li.present:first-child::before {
   top: -1rem;
 }
 ol.timeline .when {
