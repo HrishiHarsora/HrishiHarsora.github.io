@@ -331,8 +331,6 @@ def _entry_date(when: str) -> datetime:
     Anything unrecognised sorts to the bottom.
     """
     when = when.strip()
-    if "present" in when.lower():   # ongoing — pinned to the very top
-        return datetime.max
     for fmt in ("%B %Y", "%b %Y", "%Y-%m-%d", "%Y-%m", "%B %d, %Y", "%Y"):
         try:
             return datetime.strptime(when, fmt)
@@ -367,14 +365,23 @@ def progress_section_html() -> str:
 
     entries.sort(key=lambda e: e[0], reverse=True)
 
+    # Index of the ongoing "Present" entry, if any; entries above it sit on its bar.
+    present_idx = next(
+        (i for i, e in enumerate(entries) if "present" in e[1].lower()), None
+    )
     items: list[str] = []
-    for _, when, headline, _details in entries:
+    for i, (_, when, headline, _details) in enumerate(entries):
         # A date range (en/em dash, spaced hyphen, or "to") renders as a spanning
-        # bar instead of a point; an ongoing "Present" entry also runs its bar up
-        # to the very top of the timeline to signal it's still happening.
+        # bar instead of a point; an ongoing "Present" entry runs its bar up to the
+        # top, and more-recent one-time events sit on that bar.
         is_present = "present" in when.lower()
         is_range = is_present or bool(re.search(r"[–—]|\s-\s|\bto\b", when, re.IGNORECASE))
-        classes = " ".join(c for c, on in (("range", is_range), ("present", is_present)) if on)
+        on_bar = present_idx is not None and i < present_idx
+        classes = " ".join(
+            c
+            for c, on in (("range", is_range), ("present", is_present), ("on-bar", on_bar))
+            if on
+        )
         li_open = f'      <li class="{classes}">' if classes else "      <li>"
         # Only the date and headline are shown; any further detail lines in
         # progress.md are kept in the source but not rendered on the timeline.
@@ -599,12 +606,27 @@ ol.timeline li.range::before {
   top: 0.4rem;
   bottom: 0.4rem;
   height: auto;
-  border-radius: 0.21rem;
+  width: 0.5rem;
+  left: -0.33rem;
+  border-radius: 0.25rem;
 }
-/* An ongoing "Present" period is pinned to the top and runs its bar up to the
-   very top of the timeline to show it is still going. */
-ol.timeline li.present:first-child::before {
-  top: -1rem;
+/* An ongoing "Present" period runs a thick bar from its own entry all the way
+   up to the very top of the timeline (clipped by the scroll box) — so more
+   recent one-time events sit within its span. */
+ol.timeline li.present::before {
+  top: -60rem;
+  bottom: 0.4rem;
+  height: auto;
+  width: 0.5rem;
+  left: -0.33rem;
+  border-radius: 0.25rem;
+  z-index: 0;
+}
+/* A one-time event that falls on the ongoing bar shows as a light marker. */
+ol.timeline li.on-bar::before {
+  background: var(--background);
+  box-shadow: 0 0 0 1.5px var(--text);
+  z-index: 2;
 }
 ol.timeline .when {
   display: block;
