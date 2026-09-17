@@ -331,6 +331,8 @@ def _entry_date(when: str) -> datetime:
     Anything unrecognised sorts to the bottom.
     """
     when = when.strip()
+    if "present" in when.lower():   # ongoing — pinned to the very top
+        return datetime.max
     for fmt in ("%B %Y", "%b %Y", "%Y-%m-%d", "%Y-%m", "%B %d, %Y", "%Y"):
         try:
             return datetime.strptime(when, fmt)
@@ -598,6 +600,11 @@ ol.timeline li.range::before {
   bottom: 0.4rem;
   height: auto;
   border-radius: 0.21rem;
+}
+/* An ongoing "Present" period is pinned to the top and runs its bar up to the
+   very top of the timeline to show it is still going. */
+ol.timeline li.present:first-child::before {
+  top: -1rem;
 }
 ol.timeline .when {
   display: block;
